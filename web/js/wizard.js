@@ -1,15 +1,30 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     const totalSteps = 5;
+    const userId = "test_user_pwa";
+    const apiBaseUrl = window.location.origin;
     let currentStep = 1;
+    let currentGoal = null;
+    let currentTasks = [];
 
-    // Elements
-    const form = document.getElementById('wizard-form');
-    const steps = document.querySelectorAll('.wizard-step');
-    const btnNext = document.getElementById('btn-next');
-    const btnBack = document.getElementById('btn-back');
-    const progressBar = document.getElementById('progress-bar');
-    const stepIndicator = document.getElementById('step-indicator');
-    const stepTitle = document.getElementById('step-title');
+    const form = document.getElementById("wizard-form");
+    const steps = document.querySelectorAll(".wizard-step");
+    const btnNext = document.getElementById("btn-next");
+    const btnBack = document.getElementById("btn-back");
+    const btnNewGoal = document.getElementById("btn-new-goal");
+    const progressBar = document.getElementById("progress-bar");
+    const stepIndicator = document.getElementById("step-indicator");
+    const stepTitle = document.getElementById("step-title");
+    const reviewContent = document.getElementById("review-content");
+    const loading = document.getElementById("loading");
+    const wizardContainer = document.getElementById("wizard-container");
+    const todoDashboard = document.getElementById("todo-dashboard");
+    const todoList = document.getElementById("todo-list");
+    const todoStatus = document.getElementById("todo-status");
+    const dashboardGoalTitle = document.getElementById("dashboard-goal-title");
+    const dashboardGoalMeta = document.getElementById("dashboard-goal-meta");
+    const statsTotal = document.getElementById("stats-total");
+    const statsCompleted = document.getElementById("stats-completed");
+    const statsExp = document.getElementById("stats-exp");
     const stepTitles = {
         1: "Goal",
         2: "Baseline",
@@ -18,128 +33,250 @@ document.addEventListener('DOMContentLoaded', () => {
         5: "Review"
     };
 
-    // State
     const formData = {};
 
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+    }
+
     function updateUI() {
-        // Show/Hide Steps
-        steps.forEach(step => {
-            const stepNum = parseInt(step.dataset.step);
-            if (stepNum === currentStep) {
-                step.classList.remove('hidden');
-            } else {
-                step.classList.add('hidden');
-            }
+        steps.forEach((step) => {
+            const stepNum = Number.parseInt(step.dataset.step, 10);
+            step.classList.toggle("hidden", stepNum !== currentStep);
         });
 
-        // Update Progress
         const progress = (currentStep / totalSteps) * 100;
         progressBar.style.width = `${progress}%`;
         stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
         stepTitle.textContent = stepTitles[currentStep];
 
-        // Buttons
         if (currentStep === 1) {
-            btnBack.classList.add('hidden');
-            btnNext.classList.add('ml-auto');
+            btnBack.classList.add("hidden");
+            btnNext.classList.add("ml-auto");
         } else {
-            btnBack.classList.remove('hidden');
-            btnNext.classList.remove('ml-auto');
+            btnBack.classList.remove("hidden");
+            btnNext.classList.remove("ml-auto");
         }
 
+        btnNext.textContent = currentStep === totalSteps ? "Generate ToDos" : "Next";
+
         if (currentStep === totalSteps) {
-            btnNext.textContent = 'Submit Quest';
             populateReview();
-        } else {
-            btnNext.textContent = 'Next';
         }
     }
 
     function populateReview() {
-        const reviewContent = document.getElementById('review-content');
         reviewContent.innerHTML = `
-            <p><strong class="text-white">Goal:</strong> ${formData.long_term_goal || '-'}</p>
-            <p><strong class="text-white">Baseline:</strong> ${formData.baseline || '-'}</p>
-            <p><strong class="text-white">Deadline:</strong> ${formData.deadline || '-'}</p>
-            <p><strong class="text-white">Weekdays:</strong> ${formData.daily_time_weekday} mins</p>
-            <p><strong class="text-white">Weekends:</strong> ${formData.daily_time_weekend} mins</p>
+            <p><strong class="text-white">Goal:</strong> ${escapeHtml(formData.long_term_goal || "-")}</p>
+            <p><strong class="text-white">Baseline:</strong> ${escapeHtml(formData.baseline || "-")}</p>
+            <p><strong class="text-white">Deadline:</strong> ${escapeHtml(formData.deadline || "-")}</p>
+            <p><strong class="text-white">Weekdays:</strong> ${escapeHtml(formData.daily_time_weekday || 0)} mins</p>
+            <p><strong class="text-white">Weekends:</strong> ${escapeHtml(formData.daily_time_weekend || 0)} mins</p>
         `;
     }
 
     function collectData() {
-        const currentInputs = document.querySelector(`.wizard-step[data-step="${currentStep}"]`).querySelectorAll('input, textarea');
-        currentInputs.forEach(input => {
+        const currentInputs = document
+            .querySelector(`.wizard-step[data-step="${currentStep}"]`)
+            .querySelectorAll("input, textarea");
+        currentInputs.forEach((input) => {
             formData[input.name] = input.value;
         });
     }
 
     function validate() {
-        if (currentStep === 1 && !document.querySelector('input[name="long_term_goal"]').value.trim()) return false;
-        if (currentStep === 3 && !document.querySelector('input[name="deadline"]').value) return false;
+        if (currentStep === 1 && !document.querySelector('input[name="long_term_goal"]').value.trim()) {
+            return false;
+        }
+        if (currentStep === 3 && !document.querySelector('input[name="deadline"]').value) {
+            return false;
+        }
         return true;
     }
 
-    btnNext.addEventListener('click', async () => {
-        collectData();
+    function setLoadingState(isLoading) {
+        loading.classList.toggle("hidden", !isLoading);
+        btnNext.disabled = isLoading;
+        btnBack.disabled = isLoading;
+    }
 
-        if (!validate()) {
-            alert('Please fill in the required fields.');
+    function showWizard() {
+        wizardContainer.classList.remove("hidden");
+        todoDashboard.classList.add("hidden");
+    }
+
+    function showDashboard() {
+        wizardContainer.classList.add("hidden");
+        todoDashboard.classList.remove("hidden");
+    }
+
+    function renderDashboard(goal, tasks) {
+        currentGoal = goal;
+        currentTasks = tasks;
+
+        const completedCount = tasks.filter((task) => task.completed).length;
+        const pendingTasks = tasks.filter((task) => !task.completed);
+        const expReady = pendingTasks.reduce((sum, task) => sum + (task.xp_reward || 0), 0);
+
+        dashboardGoalTitle.textContent = goal.long_term_goal;
+        dashboardGoalMeta.textContent = `Deadline: ${goal.deadline} • Weekdays ${goal.daily_time_weekday} min • Weekends ${goal.daily_time_weekend} min`;
+        statsTotal.textContent = String(tasks.length);
+        statsCompleted.textContent = String(completedCount);
+        statsExp.textContent = String(expReady);
+        todoStatus.textContent = tasks.length ? `${pendingTasks.length} quests left today` : "No tasks generated yet";
+
+        if (!tasks.length) {
+            todoList.innerHTML = `
+                <article class="empty-card">
+                    <p class="text-white font-semibold">No ToDos found.</p>
+                    <p class="text-slate-400 text-sm mt-2">Try submitting the goal again after checking the backend logs.</p>
+                </article>
+            `;
             return;
         }
 
-        if (currentStep < totalSteps) {
-            currentStep++;
-            updateUI();
-        } else {
-            // Submit
-            await submitGoal();
-        }
-    });
+        todoList.innerHTML = tasks
+            .map((task) => {
+                const completeLabel = task.completed ? "Completed" : "Complete";
+                return `
+                    <article class="todo-card ${task.completed ? "is-complete" : ""}">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h4 class="text-base font-semibold text-white">${escapeHtml(task.title)}</h4>
+                                    <span class="difficulty-badge difficulty-${task.difficulty}">Difficulty ${escapeHtml(task.difficulty)}</span>
+                                </div>
+                                <p class="text-slate-300 text-sm mt-2">${escapeHtml(task.description || "No description")}</p>
+                                <p class="text-amber-300 text-sm mt-3 font-semibold">+${escapeHtml(task.xp_reward || 0)} EXP</p>
+                            </div>
+                            <button
+                                type="button"
+                                class="todo-action"
+                                data-task-id="${escapeHtml(task.id)}"
+                                ${task.completed ? "disabled" : ""}
+                            >
+                                ${completeLabel}
+                            </button>
+                        </div>
+                    </article>
+                `;
+            })
+            .join("");
+    }
 
-    btnBack.addEventListener('click', () => {
-        if (currentStep > 1) {
-            currentStep--;
-            updateUI();
+    async function fetchTasks(goalId) {
+        const response = await fetch(`${apiBaseUrl}/tasks/${encodeURIComponent(userId)}?goal_id=${encodeURIComponent(goalId)}`);
+        if (!response.ok) {
+            throw new Error("Failed to fetch tasks");
         }
-    });
+        return response.json();
+    }
 
     async function submitGoal() {
         const payload = {
-            user_id: "test_user_pwa", // Temporary hardcoded ID
+            user_id: userId,
             long_term_goal: formData.long_term_goal,
             baseline: formData.baseline,
             deadline: formData.deadline,
-            daily_time_weekday: parseInt(formData.daily_time_weekday) || 0,
-            daily_time_weekend: parseInt(formData.daily_time_weekend) || 0
+            daily_time_weekday: Number.parseInt(formData.daily_time_weekday, 10) || 0,
+            daily_time_weekend: Number.parseInt(formData.daily_time_weekend, 10) || 0
         };
 
-        btnNext.disabled = true;
-        btnNext.textContent = "Summoning...";
+        setLoadingState(true);
+        btnNext.textContent = "Generating...";
 
         try {
-            const response = await fetch('http://localhost:8000/goals/', {
-                method: 'POST',
+            const response = await fetch(`${apiBaseUrl}/goals/`, {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify(payload)
             });
 
-            if (response.ok) {
-                const result = await response.json();
-                alert('Quest Accepted! Goal ID: ' + result.id);
-                // Reset or Redirect
-                currentStep = 1;
-                updateUI();
-                form.reset();
-            } else {
-                alert('Failed to accept quest.');
+            if (!response.ok) {
+                throw new Error("Failed to accept quest");
             }
-        } catch (e) {
-            console.error(e);
-            alert('Connection lost. Please try again.');
+
+            const goal = await response.json();
+            const tasks = await fetchTasks(goal.id);
+            renderDashboard(goal, tasks);
+            showDashboard();
+        } catch (error) {
+            console.error(error);
+            alert("Failed to generate ToDos. Check the backend connection and try again.");
         } finally {
-            btnNext.disabled = false;
+            setLoadingState(false);
+            btnNext.textContent = "Generate ToDos";
         }
     }
+
+    async function completeTask(taskId) {
+        try {
+            const response = await fetch(`${apiBaseUrl}/tasks/${encodeURIComponent(taskId)}/complete`, {
+                method: "PATCH"
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to complete task");
+            }
+
+            const updatedTask = await response.json();
+            const nextTasks = currentTasks.map((task) => task.id === updatedTask.id ? updatedTask : task);
+            renderDashboard(currentGoal, nextTasks);
+        } catch (error) {
+            console.error(error);
+            alert("Could not mark the task as complete.");
+        }
+    }
+
+    btnNext.addEventListener("click", async () => {
+        collectData();
+
+        if (!validate()) {
+            alert("Please fill in the required fields.");
+            return;
+        }
+
+        if (currentStep < totalSteps) {
+            currentStep += 1;
+            updateUI();
+            return;
+        }
+
+        await submitGoal();
+    });
+
+    btnBack.addEventListener("click", () => {
+        if (currentStep > 1) {
+            currentStep -= 1;
+            updateUI();
+        }
+    });
+
+    btnNewGoal.addEventListener("click", () => {
+        currentGoal = null;
+        currentTasks = [];
+        currentStep = 1;
+        Object.keys(formData).forEach((key) => delete formData[key]);
+        form.reset();
+        updateUI();
+        showWizard();
+    });
+
+    todoList.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-task-id]");
+        if (!button || button.disabled) {
+            return;
+        }
+        button.disabled = true;
+        await completeTask(button.dataset.taskId);
+    });
+
+    updateUI();
 });

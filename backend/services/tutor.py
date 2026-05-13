@@ -13,13 +13,51 @@ class TutorService:
         else:
             print("Warning: OPENAI_API_KEY not found. AI Tutor features will fail.")
 
+    def _build_fallback_schedule(self, goal: str, baseline: str, days: int = 7) -> List[Dict[str, Any]]:
+        goal_text = (goal or "your goal").strip()
+        baseline_text = (baseline or "your current level").strip()
+
+        starter_titles = [
+            "Define the first milestone",
+            "Prepare your study or work setup",
+            "Complete a focused practice session",
+            "Review what felt difficult",
+            "Apply the skill in a small output",
+            "Measure progress and adjust",
+            "Plan the next week",
+        ]
+        starter_details = [
+            f"Break '{goal_text}' into one concrete milestone you can finish soon.",
+            f"List tools, references, and constraints based on {baseline_text}.",
+            f"Spend 25-45 minutes doing deliberate practice for '{goal_text}'.",
+            "Write down blockers, questions, and what needs repetition.",
+            "Create one small artifact that proves progress today.",
+            "Check what improved, what stalled, and adjust tomorrow's scope.",
+            "Choose the next actions to keep the streak going.",
+        ]
+        difficulties = [1, 2, 2, 3, 3, 2, 1]
+        exp_map = {1: 5, 2: 10, 3: 20, 4: 35, 5: 55}
+
+        schedule = []
+        for index in range(days):
+            difficulty = difficulties[index % len(difficulties)]
+            schedule.append(
+                {
+                    "title": starter_titles[index % len(starter_titles)],
+                    "description": starter_details[index % len(starter_details)],
+                    "difficulty": difficulty,
+                    "xp_reward": exp_map[difficulty],
+                }
+            )
+        return schedule
+
     def generate_schedule(self, goal: str, baseline: str, days: int = 7) -> List[Dict[str, Any]]:
         """
         Generates a list of daily tasks based on the goal and baseline.
         """
         if not self.client:
             print("OpenAI client not initialized.")
-            return []
+            return self._build_fallback_schedule(goal, baseline, days)
 
         prompt = f"""
         You are an expert AI Tutor and RPG quest giver.
@@ -59,9 +97,11 @@ class TutorService:
                 content = content[:-3]
                 
             tasks = json.loads(content)
+            if not tasks:
+                return self._build_fallback_schedule(goal, baseline, days)
             return tasks
         except Exception as e:
             print(f"Error generating schedule: {e}")
-            return []
+            return self._build_fallback_schedule(goal, baseline, days)
 
 tutor_service = TutorService()
