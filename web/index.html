@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ToDo RPG</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <!-- Tailwind CSS (via CDN for simplicity in template, consider build step later) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 </head>
@@ -23,6 +23,13 @@
             <p class="text-slate-300 mt-2">Turn one long-term goal into a week of executable quests.</p>
         </header>
 
+        <nav id="app-nav" class="app-nav hidden mb-5" aria-label="Main pages">
+            <button type="button" class="nav-button" data-page-target="quests">Quests</button>
+            <button type="button" class="nav-button" data-page-target="home">Home</button>
+            <button type="button" class="nav-button" data-page-target="guild">Guild</button>
+            <button type="button" class="nav-button" data-page-target="settings">Settings</button>
+        </nav>
+
         <main id="main-content" class="relative">
             <!-- Loading State -->
             <div id="loading" class="hidden text-center py-10">
@@ -30,7 +37,7 @@
             </div>
 
             <!-- Wizard Container -->
-            <div id="wizard-container" class="panel rounded-[28px] p-6 shadow-lg">
+            <div id="wizard-container" class="app-page panel rounded-[28px] p-6 shadow-lg" data-page="setup">
                 <div class="mb-6">
                     <div class="flex justify-between text-xs text-slate-400 mb-2">
                         <span id="step-indicator">Step 1 of 5</span>
@@ -92,25 +99,25 @@
                     </div>
 
                     <div class="flex justify-between mt-8">
-                        <button type="button" id="btn-back"
-                            class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-50 hidden">Back</button>
+                        <div class="flex gap-2">
+                            <button type="button" id="btn-back"
+                                class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-50 hidden">Back</button>
+                            <button type="button" id="btn-cancel-goal"
+                                class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-50 hidden">Cancel</button>
+                        </div>
                         <button type="button" id="btn-next"
                             class="px-6 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-rose-500 text-slate-950 font-bold ml-auto hover:opacity-90">Next</button>
                     </div>
                 </form>
             </div>
 
-            <section id="todo-dashboard" class="panel rounded-[28px] p-6 shadow-lg hidden">
+            <section id="todo-dashboard" class="app-page panel rounded-[28px] p-6 shadow-lg hidden" data-page="quests">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <p class="eyebrow">Today Dashboard</p>
-                        <h2 id="dashboard-goal-title" class="text-2xl font-bold text-white">Your Quest</h2>
+                        <p class="eyebrow">Quests</p>
+                        <h2 id="dashboard-goal-title" class="text-2xl font-bold text-white">Your ToDos</h2>
                         <p id="dashboard-goal-meta" class="text-slate-300 mt-2"></p>
                     </div>
-                    <button type="button" id="btn-new-goal"
-                        class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-semibold">
-                        New Goal
-                    </button>
                 </div>
 
                 <div class="stats-grid mt-6">
@@ -134,6 +141,55 @@
                         <p id="todo-status" class="text-sm text-slate-400"></p>
                     </div>
                     <div id="todo-list" class="space-y-3"></div>
+                </div>
+            </section>
+
+            <section id="home-page" class="app-page panel rounded-[28px] p-6 shadow-lg hidden" data-page="home">
+                <p class="eyebrow">Home</p>
+                <h2 class="text-2xl font-bold text-white">Room & Equipment</h2>
+                <div class="placeholder-grid mt-6">
+                    <article class="placeholder-card">
+                        <p class="placeholder-title">Home</p>
+                        <p class="placeholder-copy">Room setup and decoration will be added here.</p>
+                    </article>
+                    <article class="placeholder-card">
+                        <p class="placeholder-title">Weapons</p>
+                        <p class="placeholder-copy">Weapon loadout and upgrades will be added here.</p>
+                    </article>
+                    <article class="placeholder-card">
+                        <p class="placeholder-title">Wear</p>
+                        <p class="placeholder-copy">Outfit and gear setup will be added here.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section id="guild-page" class="app-page panel rounded-[28px] p-6 shadow-lg hidden" data-page="guild">
+                <p class="eyebrow">Guild</p>
+                <h2 class="text-2xl font-bold text-white">Guild</h2>
+                <article class="empty-card mt-6">
+                    <p class="text-white font-semibold">To be implemented.</p>
+                    <p class="text-slate-400 text-sm mt-2">Party, rankings, and shared challenges can live here later.</p>
+                </article>
+            </section>
+
+            <section id="settings-page" class="app-page panel rounded-[28px] p-6 shadow-lg hidden" data-page="settings">
+                <p class="eyebrow">Settings</p>
+                <h2 class="text-2xl font-bold text-white">Settings</h2>
+                <div class="settings-list mt-6">
+                    <article class="settings-row">
+                        <div>
+                            <p class="settings-title">Current goal</p>
+                            <p id="settings-goal-summary" class="settings-copy">No goal yet.</p>
+                        </div>
+                        <button type="button" id="btn-change-goal" class="secondary-action">Change Goal</button>
+                    </article>
+                    <article class="settings-row">
+                        <div>
+                            <p class="settings-title">Music</p>
+                            <p class="settings-copy">Future background music and sound controls.</p>
+                        </div>
+                        <span class="coming-soon">Future</span>
+                    </article>
                 </div>
             </section>
         </main>

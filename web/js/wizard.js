@@ -7,10 +7,14 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentTasks = [];
 
     const form = document.getElementById("wizard-form");
+    const appNav = document.getElementById("app-nav");
+    const navButtons = document.querySelectorAll("[data-page-target]");
+    const appPages = document.querySelectorAll(".app-page");
     const steps = document.querySelectorAll(".wizard-step");
     const btnNext = document.getElementById("btn-next");
     const btnBack = document.getElementById("btn-back");
-    const btnNewGoal = document.getElementById("btn-new-goal");
+    const btnCancelGoal = document.getElementById("btn-cancel-goal");
+    const btnChangeGoal = document.getElementById("btn-change-goal");
     const progressBar = document.getElementById("progress-bar");
     const stepIndicator = document.getElementById("step-indicator");
     const stepTitle = document.getElementById("step-title");
@@ -25,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const statsTotal = document.getElementById("stats-total");
     const statsCompleted = document.getElementById("stats-completed");
     const statsExp = document.getElementById("stats-exp");
+    const settingsGoalSummary = document.getElementById("settings-goal-summary");
     const stepTitles = {
         1: "Goal",
         2: "Baseline",
@@ -103,44 +108,71 @@ document.addEventListener("DOMContentLoaded", () => {
         loading.classList.toggle("hidden", !isLoading);
         btnNext.disabled = isLoading;
         btnBack.disabled = isLoading;
+        btnCancelGoal.disabled = isLoading;
     }
 
-    function showWizard() {
-        wizardContainer.classList.remove("hidden");
-        todoDashboard.classList.add("hidden");
+    function showPage(pageName) {
+        appPages.forEach((page) => {
+            page.classList.toggle("hidden", page.dataset.page !== pageName);
+        });
+
+        appNav.classList.toggle("hidden", !currentGoal);
+        navButtons.forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.pageTarget === pageName);
+        });
+
+        if (pageName === "settings") {
+            renderSettings();
+        }
+
+        document.getElementById("main-content").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function showWizard({ allowCancel = false } = {}) {
+        btnCancelGoal.classList.toggle("hidden", !allowCancel);
+        showPage("setup");
     }
 
     function showDashboard() {
-        wizardContainer.classList.add("hidden");
-        todoDashboard.classList.remove("hidden");
+        showPage("quests");
+    }
+
+    function renderSettings() {
+        if (!currentGoal) {
+            settingsGoalSummary.textContent = "No goal yet.";
+            return;
+        }
+
+        settingsGoalSummary.textContent = `${currentGoal.long_term_goal || "Untitled goal"} • Deadline: ${currentGoal.deadline || "-"}`;
     }
 
     function renderDashboard(goal, tasks) {
         currentGoal = goal;
-        currentTasks = tasks;
+        currentTasks = Array.isArray(tasks) ? tasks : [];
 
-        const completedCount = tasks.filter((task) => task.completed).length;
-        const pendingTasks = tasks.filter((task) => !task.completed);
+        const completedCount = currentTasks.filter((task) => task.completed).length;
+        const pendingTasks = currentTasks.filter((task) => !task.completed);
         const expReady = pendingTasks.reduce((sum, task) => sum + (task.xp_reward || 0), 0);
 
-        dashboardGoalTitle.textContent = goal.long_term_goal;
-        dashboardGoalMeta.textContent = `Deadline: ${goal.deadline} • Weekdays ${goal.daily_time_weekday} min • Weekends ${goal.daily_time_weekend} min`;
-        statsTotal.textContent = String(tasks.length);
+        dashboardGoalTitle.textContent = goal.long_term_goal || "Your Quest";
+        dashboardGoalMeta.textContent = `Deadline: ${goal.deadline || "-"} • Weekdays ${goal.daily_time_weekday || 0} min • Weekends ${goal.daily_time_weekend || 0} min`;
+        statsTotal.textContent = String(currentTasks.length);
         statsCompleted.textContent = String(completedCount);
         statsExp.textContent = String(expReady);
-        todoStatus.textContent = tasks.length ? `${pendingTasks.length} quests left today` : "No tasks generated yet";
+        todoStatus.textContent = currentTasks.length ? `${pendingTasks.length} quests left today` : "No tasks generated yet";
+        renderSettings();
 
-        if (!tasks.length) {
+        if (!currentTasks.length) {
             todoList.innerHTML = `
                 <article class="empty-card">
                     <p class="text-white font-semibold">No ToDos found.</p>
-                    <p class="text-slate-400 text-sm mt-2">Try submitting the goal again after checking the backend logs.</p>
+                    <p class="text-slate-400 text-sm mt-2">The goal was saved, but no ToDos were returned yet.</p>
                 </article>
             `;
             return;
         }
 
-        todoList.innerHTML = tasks
+        todoList.innerHTML = currentTasks
             .map((task) => {
                 const completeLabel = task.completed ? "Completed" : "Complete";
                 return `
@@ -204,9 +236,19 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const goal = await response.json();
-            const tasks = await fetchTasks(goal.id);
-            renderDashboard(goal, tasks);
+            renderDashboard(goal, []);
             showDashboard();
+
+            let tasks = [];
+            try {
+                tasks = await fetchTasks(goal.id);
+            } catch (taskError) {
+                console.error(taskError);
+                todoStatus.textContent = "Goal saved, but ToDos could not be loaded";
+                return;
+            }
+
+            renderDashboard(goal, tasks);
         } catch (error) {
             console.error(error);
             alert("Failed to generate ToDos. Check the backend connection and try again.");
@@ -259,14 +301,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    btnNewGoal.addEventListener("click", () => {
-        currentGoal = null;
-        currentTasks = [];
+    btnCancelGoal.addEventListener("click", () => {
+        if (currentGoal) {
+            showDashboard();
+        }
+    });
+
+    btnChangeGoal.addEventListener("click", () => {
         currentStep = 1;
         Object.keys(formData).forEach((key) => delete formData[key]);
         form.reset();
         updateUI();
-        showWizard();
+        showWizard({ allowCancel: Boolean(currentGoal) });
+    });
+
+    navButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            showPage(button.dataset.pageTarget);
+        });
     });
 
     todoList.addEventListener("click", async (event) => {
@@ -279,4 +331,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     updateUI();
+    showWizard();
 });
