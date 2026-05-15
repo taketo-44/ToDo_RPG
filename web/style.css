@@ -72,7 +72,7 @@ body.app-shell {
 }
 
 .field {
-    background: var(--field) !important;
+    background-color: var(--field) !important;
     border: 1px solid var(--field-border);
     border-radius: 1rem;
     padding: 0.85rem 1rem;
