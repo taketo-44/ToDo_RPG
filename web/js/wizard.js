@@ -20,8 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const stepTitle = document.getElementById("step-title");
     const reviewContent = document.getElementById("review-content");
     const loading = document.getElementById("loading");
-    const wizardContainer = document.getElementById("wizard-container");
-    const todoDashboard = document.getElementById("todo-dashboard");
     const todoList = document.getElementById("todo-list");
     const todoStatus = document.getElementById("todo-status");
     const dashboardGoalTitle = document.getElementById("dashboard-goal-title");
@@ -109,6 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
         btnNext.disabled = isLoading;
         btnBack.disabled = isLoading;
         btnCancelGoal.disabled = isLoading;
+        btnChangeGoal.disabled = isLoading;
+        navButtons.forEach((button) => { button.disabled = isLoading; });
     }
 
     function showPage(pageName) {
@@ -245,6 +245,12 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (taskError) {
                 console.error(taskError);
                 todoStatus.textContent = "Goal saved, but ToDos could not be loaded";
+                todoList.innerHTML = `
+                    <article class="empty-card">
+                        <p class="text-white font-semibold">Failed to load quests.</p>
+                        <p class="text-slate-400 text-sm mt-2">Your goal was saved, but ToDos could not be retrieved. Please try again later.</p>
+                    </article>
+                `;
                 return;
             }
 
