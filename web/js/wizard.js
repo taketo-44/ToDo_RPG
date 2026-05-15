@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 todoStatus.textContent = "Goal saved, but ToDos could not be loaded";
                 todoList.innerHTML = `
                     <article class="empty-card">
-                        <p class="text-white font-semibold">Failed to load quests.</p>
+                        <p class="text-white font-semibold">Failed to load ToDos.</p>
                         <p class="text-slate-400 text-sm mt-2">Your goal was saved, but ToDos could not be retrieved. Please try again later.</p>
                     </article>
                 `;
