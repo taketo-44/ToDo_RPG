@@ -16,32 +16,32 @@
 <body class="app-shell min-h-screen text-white">
     <div id="app" class="container mx-auto px-4 py-8 max-w-md">
         <header class="mb-8 text-center">
-            <p class="eyebrow">Quest Planner</p>
+            <p class="eyebrow" data-i18n="appEyebrow">Quest Planner</p>
             <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-orange-400 to-rose-500">
                 ToDo RPG
             </h1>
-            <p class="text-slate-300 mt-2">Turn one long-term goal into a week of executable quests.</p>
+            <p class="text-slate-300 mt-2" data-i18n="appSubtitle">Turn one long-term goal into a week of executable quests.</p>
         </header>
 
         <nav id="app-nav" class="app-nav hidden mb-5" aria-label="Main pages">
-            <button type="button" class="nav-button" data-page-target="quests">Quests</button>
-            <button type="button" class="nav-button" data-page-target="home">Home</button>
-            <button type="button" class="nav-button" data-page-target="guild">Guild</button>
-            <button type="button" class="nav-button" data-page-target="settings">Settings</button>
+            <button type="button" class="nav-button" data-page-target="quests" data-i18n="navQuests">Quests</button>
+            <button type="button" class="nav-button" data-page-target="home" data-i18n="navHome">Home</button>
+            <button type="button" class="nav-button" data-page-target="guild" data-i18n="navGuild">Guild</button>
+            <button type="button" class="nav-button" data-page-target="settings" data-i18n="navSettings">Settings</button>
         </nav>
 
         <main id="main-content" class="relative">
             <!-- Loading State -->
             <div id="loading" class="hidden text-center py-10">
-                <p class="animate-pulse text-amber-300">Loading...</p>
+                <p class="animate-pulse text-amber-300" data-i18n="loading">Loading...</p>
             </div>
 
             <!-- Wizard Container -->
             <div id="wizard-container" class="app-page panel rounded-[28px] p-6 shadow-lg" data-page="setup">
                 <div class="mb-6">
                     <div class="flex justify-between text-xs text-slate-400 mb-2">
-                        <span id="step-indicator">Step 1 of 5</span>
-                        <span id="step-title">Goal</span>
+                        <span id="step-indicator">Step 1 of 6</span>
+                        <span id="step-title">Language</span>
                     </div>
                     <div class="w-full bg-slate-700 rounded-full h-2">
                         <div id="progress-bar" class="bg-gradient-to-r from-amber-400 to-rose-500 h-2 rounded-full transition-all duration-300"
@@ -50,49 +50,70 @@
                 </div>
 
                 <form id="wizard-form" onsubmit="return false;">
-                    <!-- Step 1: Goal -->
+                    <!-- Step 1: Language -->
                     <div class="wizard-step" data-step="1">
-                        <label class="block text-lg font-medium mb-2">What is your long-term goal?</label>
+                        <label class="block text-lg font-medium mb-3" data-i18n="languageQuestion">Choose your language</label>
+                        <div class="language-options" role="radiogroup" aria-label="Language">
+                            <label class="language-card">
+                                <input type="radio" name="language" value="en" checked>
+                                <span>
+                                    <strong>English</strong>
+                                    <small>Use ToDo RPG in English.</small>
+                                </span>
+                            </label>
+                            <label class="language-card">
+                                <input type="radio" name="language" value="ja">
+                                <span>
+                                    <strong>日本語</strong>
+                                    <small>ToDo RPGを日本語で使います。</small>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Goal -->
+                    <div class="wizard-step hidden" data-step="2">
+                        <label class="block text-lg font-medium mb-2" data-i18n="goalQuestion">What is your long-term goal?</label>
                         <input type="text" name="long_term_goal"
                             class="w-full field"
-                            placeholder="e.g. Master Python, Lose 5kg">
+                            placeholder="e.g. Master Python, Lose 5kg" data-i18n-placeholder="goalPlaceholder">
                     </div>
 
-                    <!-- Step 2: Baseline -->
-                    <div class="wizard-step hidden" data-step="2">
-                        <label class="block text-lg font-medium mb-2">Where are you starting from?</label>
+                    <!-- Step 3: Baseline -->
+                    <div class="wizard-step hidden" data-step="3">
+                        <label class="block text-lg font-medium mb-2" data-i18n="baselineQuestion">Where are you starting from?</label>
                         <textarea name="baseline"
                             class="w-full field"
-                            rows="3" placeholder="e.g. Can write basic scripts, 75kg"></textarea>
+                            rows="3" placeholder="e.g. Can write basic scripts, 75kg" data-i18n-placeholder="baselinePlaceholder"></textarea>
                     </div>
 
-                    <!-- Step 3: Deadline -->
-                    <div class="wizard-step hidden" data-step="3">
-                        <label class="block text-lg font-medium mb-2">When do you want to achieve this?</label>
+                    <!-- Step 4: Deadline -->
+                    <div class="wizard-step hidden" data-step="4">
+                        <label class="block text-lg font-medium mb-2" data-i18n="deadlineQuestion">When do you want to achieve this?</label>
                         <input type="date" name="deadline"
                             class="w-full field">
                     </div>
 
-                    <!-- Step 4: Time Budget -->
-                    <div class="wizard-step hidden" data-step="4">
-                        <label class="block text-lg font-medium mb-4">Daily Time Budget (minutes)</label>
+                    <!-- Step 5: Time Budget -->
+                    <div class="wizard-step hidden" data-step="5">
+                        <label class="block text-lg font-medium mb-4" data-i18n="timeBudgetQuestion">Daily Time Budget (minutes)</label>
 
                         <div class="mb-4">
-                            <label class="block text-sm text-slate-400 mb-1">Weekdays</label>
+                            <label class="block text-sm text-slate-400 mb-1" data-i18n="weekdays">Weekdays</label>
                             <input type="number" name="daily_time_weekday"
                                 class="w-full field" value="30">
                         </div>
 
                         <div>
-                            <label class="block text-sm text-slate-400 mb-1">Weekends</label>
+                            <label class="block text-sm text-slate-400 mb-1" data-i18n="weekends">Weekends</label>
                             <input type="number" name="daily_time_weekend"
                                 class="w-full field" value="60">
                         </div>
                     </div>
 
-                    <!-- Step 5: Review -->
-                    <div class="wizard-step hidden" data-step="5">
-                        <h3 class="text-xl font-bold mb-4">Review Your Quest</h3>
+                    <!-- Step 6: Review -->
+                    <div class="wizard-step hidden" data-step="6">
+                        <h3 class="text-xl font-bold mb-4" data-i18n="reviewTitle">Review Your Quest</h3>
                         <div id="review-content" class="space-y-3 text-sm text-slate-300">
                             <!-- Populated via JS -->
                         </div>
@@ -101,9 +122,9 @@
                     <div class="flex justify-between mt-8">
                         <div class="flex gap-2">
                             <button type="button" id="btn-back"
-                                class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-50 hidden">Back</button>
+                                class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-50 hidden" data-i18n="back">Back</button>
                             <button type="button" id="btn-cancel-goal"
-                                class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-50 hidden">Cancel</button>
+                                class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-50 hidden" data-i18n="cancel">Cancel</button>
                         </div>
                         <button type="button" id="btn-next"
                             class="px-6 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-rose-500 text-slate-950 font-bold ml-auto hover:opacity-90">Next</button>
@@ -114,7 +135,7 @@
             <section id="todo-dashboard" class="app-page panel rounded-[28px] p-6 shadow-lg hidden" data-page="quests">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <p class="eyebrow">Quests</p>
+                        <p class="eyebrow" data-i18n="questsEyebrow">Quests</p>
                         <h2 id="dashboard-goal-title" class="text-2xl font-bold text-white">Your ToDos</h2>
                         <p id="dashboard-goal-meta" class="text-slate-300 mt-2"></p>
                     </div>
@@ -122,22 +143,22 @@
 
                 <div class="stats-grid mt-6">
                     <article class="stat-card">
-                        <p class="stat-label">Planned quests</p>
+                        <p class="stat-label" data-i18n="plannedQuests">Planned quests</p>
                         <p id="stats-total" class="stat-value">0</p>
                     </article>
                     <article class="stat-card">
-                        <p class="stat-label">Completed</p>
+                        <p class="stat-label" data-i18n="completed">Completed</p>
                         <p id="stats-completed" class="stat-value">0</p>
                     </article>
                     <article class="stat-card">
-                        <p class="stat-label">EXP ready</p>
+                        <p class="stat-label" data-i18n="expReady">EXP ready</p>
                         <p id="stats-exp" class="stat-value">0</p>
                     </article>
                 </div>
 
                 <div class="mt-8">
                     <div class="flex items-center justify-between gap-4 mb-3">
-                        <h3 class="text-lg font-semibold">Your generated ToDos</h3>
+                        <h3 class="text-lg font-semibold" data-i18n="generatedTodos">Your generated ToDos</h3>
                         <p id="todo-status" class="text-sm text-slate-400"></p>
                     </div>
                     <div id="todo-list" class="space-y-3"></div>
@@ -145,50 +166,90 @@
             </section>
 
             <section id="home-page" class="app-page panel rounded-[28px] p-6 shadow-lg hidden" data-page="home">
-                <p class="eyebrow">Home</p>
-                <h2 class="text-2xl font-bold text-white">Room & Equipment</h2>
+                <p class="eyebrow" data-i18n="homeEyebrow">Home</p>
+                <h2 class="text-2xl font-bold text-white" data-i18n="homeTitle">Room & Equipment</h2>
                 <div class="placeholder-grid mt-6">
                     <article class="placeholder-card">
-                        <p class="placeholder-title">Home</p>
-                        <p class="placeholder-copy">Room setup and decoration will be added here.</p>
+                        <p class="placeholder-title" data-i18n="homeCardTitle">Home</p>
+                        <p class="placeholder-copy" data-i18n="homeCardCopy">Room setup and decoration will be added here.</p>
                     </article>
                     <article class="placeholder-card">
-                        <p class="placeholder-title">Weapons</p>
-                        <p class="placeholder-copy">Weapon loadout and upgrades will be added here.</p>
+                        <p class="placeholder-title" data-i18n="weaponsTitle">Weapons</p>
+                        <p class="placeholder-copy" data-i18n="weaponsCopy">Weapon loadout and upgrades will be added here.</p>
                     </article>
                     <article class="placeholder-card">
-                        <p class="placeholder-title">Wear</p>
-                        <p class="placeholder-copy">Outfit and gear setup will be added here.</p>
+                        <p class="placeholder-title" data-i18n="wearTitle">Wear</p>
+                        <p class="placeholder-copy" data-i18n="wearCopy">Outfit and gear setup will be added here.</p>
                     </article>
                 </div>
             </section>
 
             <section id="guild-page" class="app-page panel rounded-[28px] p-6 shadow-lg hidden" data-page="guild">
-                <p class="eyebrow">Guild</p>
-                <h2 class="text-2xl font-bold text-white">Guild</h2>
+                <p class="eyebrow" data-i18n="guildEyebrow">Guild</p>
+                <h2 class="text-2xl font-bold text-white" data-i18n="guildTitle">Guild</h2>
                 <article class="empty-card mt-6">
-                    <p class="text-white font-semibold">To be implemented.</p>
-                    <p class="text-slate-400 text-sm mt-2">Party, rankings, and shared challenges can live here later.</p>
+                    <p class="text-white font-semibold" data-i18n="toBeImplemented">To be implemented.</p>
+                    <p class="text-slate-400 text-sm mt-2" data-i18n="guildCopy">Party, rankings, and shared challenges can live here later.</p>
                 </article>
             </section>
 
             <section id="settings-page" class="app-page panel rounded-[28px] p-6 shadow-lg hidden" data-page="settings">
-                <p class="eyebrow">Settings</p>
-                <h2 class="text-2xl font-bold text-white">Settings</h2>
+                <p class="eyebrow" data-i18n="settingsEyebrow">Settings</p>
+                <h2 class="text-2xl font-bold text-white" data-i18n="settingsTitle">Settings</h2>
                 <div class="settings-list mt-6">
                     <article class="settings-row">
                         <div>
-                            <p class="settings-title">Current goal</p>
+                            <p class="settings-title" data-i18n="currentGoal">Current goal</p>
                             <p id="settings-goal-summary" class="settings-copy">No goal yet.</p>
                         </div>
-                        <button type="button" id="btn-change-goal" class="secondary-action">Change Goal</button>
+                        <button type="button" id="btn-change-goal" class="secondary-action" data-i18n="changeGoal">Change Goal</button>
                     </article>
                     <article class="settings-row">
                         <div>
-                            <p class="settings-title">Music</p>
-                            <p class="settings-copy">Future background music and sound controls.</p>
+                            <p class="settings-title" data-i18n="languageSettingTitle">Language</p>
+                            <p class="settings-copy" data-i18n="languageSettingCopy">Choose the language for the app and generated quests.</p>
                         </div>
-                        <span class="coming-soon">Future</span>
+                        <select id="language-setting" class="settings-select" aria-label="Language">
+                            <option value="en">English</option>
+                            <option value="ja">日本語</option>
+                        </select>
+                    </article>
+                    <article class="settings-row">
+                        <div>
+                            <p class="settings-title" data-i18n="autoGenTimeTitle">Auto-generate ToDos</p>
+                            <p class="settings-copy" data-i18n="autoGenTimeCopy">Choose when daily ToDos should be generated.</p>
+                        </div>
+                        <input type="time" id="auto-gen-time" class="settings-input" value="08:00">
+                    </article>
+                    <article class="settings-section">
+                        <div>
+                            <p class="settings-title" data-i18n="situationsTitle">Situations</p>
+                            <p class="settings-copy" data-i18n="situationsCopy">Add or edit context that should affect generated ToDos.</p>
+                        </div>
+                        <div id="situation-list" class="situation-list mt-4"></div>
+                        <div class="settings-inline-form mt-3">
+                            <input type="text" id="new-situation" class="settings-input settings-input-grow"
+                                placeholder="e.g. Commute days are busy" data-i18n-placeholder="situationPlaceholder">
+                            <button type="button" id="btn-add-situation" class="secondary-action" data-i18n="addSituation">Add</button>
+                        </div>
+                    </article>
+                    <article class="settings-row">
+                        <div>
+                            <p class="settings-title" data-i18n="holidayModeTitle">Holiday mode</p>
+                            <p id="holiday-mode-summary" class="settings-copy">Auto-generation is active.</p>
+                        </div>
+                        <div class="holiday-controls">
+                            <input type="number" id="holiday-days" class="settings-input" min="1" max="365" value="1">
+                            <button type="button" id="btn-apply-holiday" class="secondary-action" data-i18n="applyHoliday">Apply</button>
+                            <button type="button" id="btn-clear-holiday" class="secondary-action secondary-action-muted" data-i18n="clearHoliday">Clear</button>
+                        </div>
+                    </article>
+                    <article class="settings-row">
+                        <div>
+                            <p class="settings-title" data-i18n="music">Music</p>
+                            <p class="settings-copy" data-i18n="musicCopy">Future background music and sound controls.</p>
+                        </div>
+                        <span class="coming-soon" data-i18n="future">Future</span>
                     </article>
                 </div>
             </section>

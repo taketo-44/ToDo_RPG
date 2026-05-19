@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 
 try:
@@ -16,6 +16,10 @@ class GoalCreate(BaseModel):
     deadline: str
     daily_time_weekday: int  # minutes
     daily_time_weekend: int  # minutes
+    language: str = "en"
+    auto_generate_time: str = "08:00"
+    situations: List[str] = Field(default_factory=list)
+    holiday_until: Optional[str] = None
     notification_token: Optional[str] = None
 
 class GoalResponse(GoalCreate):
@@ -34,7 +38,9 @@ async def create_goal(goal: GoalCreate):
     # We run this synchronously here for simplicity, but in production this should be a background task
     schedule = tutor_service.generate_schedule(
         goal=goal.long_term_goal,
-        baseline=goal.baseline
+        baseline=goal.baseline,
+        language=goal.language,
+        situations=goal.situations
     )
     
     for task_data in schedule:
